@@ -32,7 +32,7 @@ services:
       - POSTGRES_HOST_AUTH_METHOD=password
   app:
     container_name: sensorcentral
-    image: 'lekkim/sensorcentral:1.8.13'
+    image: 'lekkim/sensorcentral:1.8.14'
     restart: on-failure
     ports:
       - "8080:8080"

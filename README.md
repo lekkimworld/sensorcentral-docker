@@ -23,3 +23,20 @@ SMARTME_PROTOCOL=http \
 SMARTME_DOMAIN=localhost:3001 \
 docker-compose up
 ```
+
+## Restore Backup ##
+```
+#!/bin/bash
+
+heroku pg:backups:capture --app desolate-meadow-68880
+heroku pg:backups:url --app desolate-meadow-68880 b026
+curl <url> > /tmp/latest.dump
+
+POSTGRES_USER="sensorcentral" \
+POSTGRES_PASSWORD="Passw0rd" \
+docker-compose ./postgres-docker-compose.yaml up
+
+pg_restore --verbose --clean --no-acl --no-owner \
+    -h localhost -U sensorcentral -d sensorcentral \
+    /tmp/latest.dump
+```
