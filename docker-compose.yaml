@@ -10,14 +10,16 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RABBIT_PASSWORD}
     volumes:
       - ${PWD}/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ${PWD}/rabbitmq:/var/lib/rabbitmq
   redis:
     container_name: redis
     image: 'redis:latest'
-    command: redis-server --include /usr/local/etc/redis/redis.conf
+    command: redis-server --include /usr/local/etc/redis/redis.conf --save 60 1 --loglevel warning
     ports:
      - "6379:6379"
     volumes:
       - ${PWD}/redis.conf:/usr/local/etc/redis/redis.conf
+      - ${PWD}/redis:/data
   postgres:
     container_name: postgres
     image: 'postgres:latest'

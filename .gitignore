@@ -1,2 +1,4 @@
 postgres
+redis
+rabbitmq
 *.sh
