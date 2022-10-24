@@ -1,0 +1,36 @@
+version: '3'
+services:
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:management
+    ports:
+    - "15672:15672"
+    - "5672:5672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBIT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBIT_PASSWORD}
+    volumes:
+      - ${PWD}/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ${PWD}/rabbitmq:/var/lib/rabbitmq
+  redis:
+    container_name: redis
+    image: 'redis:latest'
+    command: redis-server --include /usr/local/etc/redis/redis.conf --save 60 1 --loglevel warning
+    ports:
+     - "6379:6379"
+    volumes:
+      - ${PWD}/redis.conf:/usr/local/etc/redis/redis.conf
+      - ${PWD}/redis:/data
+  postgres:
+    container_name: postgres
+    image: 'postgres:latest'
+    ports:
+      - "5432:5432"
+    volumes:
+      - ${PWD}/postgres:/var/lib/postgresql/data
+      - ${PWD}/00-init-sensorcentral-db.sh:/docker-entrypoint-initdb.d/00-init-sensorcentral-db.sh
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=postgres
+      - POSTGRES_HOST_AUTH_METHOD=password
+
