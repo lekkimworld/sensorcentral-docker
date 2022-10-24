@@ -21,22 +21,23 @@ SESSION_SECRET="..." \
 SMARTME_KEY="..." \
 SMARTME_PROTOCOL=http \
 SMARTME_DOMAIN=localhost:3001 \
-docker-compose up
+docker compose up
 ```
 
-## Restore Backup ##
+## Backup database on Heroku ##
 ```
 #!/bin/bash
 
 heroku pg:backups:capture --app desolate-meadow-68880
 heroku pg:backups:url --app desolate-meadow-68880 b026
 curl <url> > /tmp/latest.dump
-
-POSTGRES_USER="sensorcentral" \
-POSTGRES_PASSWORD="Passw0rd" \
-docker-compose ./postgres-docker-compose.yaml up
-
-pg_restore --verbose --clean --no-acl --no-owner \
-    -h localhost -U sensorcentral -d sensorcentral \
-    /tmp/latest.dump
+scp /tmp/latest.dump lekkim@a.b.c.d:/tmp/latest.dump
 ```
+
+## Create initial database ##
+
+Shell 1: `POSTGRES_PASSWORD=Passw0rd docker compose -f postgres-docker-compose.yaml up`
+Shell 2: `psql -h localhost -U postgres -d sensorcentral`
+Shell 2: `grant all on schema public to sensorcentral;`
+Shell 2: `\q`
+Shell 2: `pg_restore --verbose --clean --no-acl --no-owner -h localhost -U sensorcentral -d sensorcentral /tmp/latest.dump`

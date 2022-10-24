@@ -5,4 +5,5 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 	CREATE USER sensorcentral PASSWORD '$POSTGRES_PASSWORD';
 	CREATE DATABASE sensorcentral;
 	GRANT ALL PRIVILEGES ON DATABASE sensorcentral TO sensorcentral;
+        grant all on schema public to sensorcentral;
 EOSQL
