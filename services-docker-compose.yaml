@@ -14,7 +14,7 @@ services:
       - ${PWD}/rabbitmq:/var/lib/rabbitmq
   redis:
     container_name: redis
-    image: 'redis:latest'
+    image: 'redis:7'
     command: redis-server --include /usr/local/etc/redis/redis.conf --save 60 1 --loglevel warning
     ports:
      - "6379:6379"

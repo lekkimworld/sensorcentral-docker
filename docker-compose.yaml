@@ -10,31 +10,34 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RABBIT_PASSWORD}
     volumes:
       - ${PWD}/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+#      - ${PWD}/rabbitmq:/var/lib/rabbitmq
       - /opt/docker-volumes/rabbitmq:/var/lib/rabbitmq
   redis:
     container_name: redis
-    image: 'redis:latest'
+    image: 'redis:7'
     command: redis-server --include /usr/local/etc/redis/redis.conf --save 60 1 --loglevel warning
     ports:
      - "6379:6379"
     volumes:
       - ${PWD}/redis.conf:/usr/local/etc/redis/redis.conf
-      - /opt/docker-volumes/redis:/data
+#      - ${PWD}/redis:/data
+       - /opt/docker-volumes/redis:/data
   postgres:
     container_name: postgres
     image: 'postgres:latest'
     ports:
       - "5432:5432"
     volumes:
-      - /opt/docker-volumes/postgres:/var/lib/postgresql/data
       - ${PWD}/00-init-sensorcentral-db.sh:/docker-entrypoint-initdb.d/00-init-sensorcentral-db.sh
+#      - ${PWD}/postgres:/var/lib/postgresql/data
+      - /opt/docker-volumes/postgres:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=postgres
       - POSTGRES_HOST_AUTH_METHOD=password
   app:
     container_name: sensorcentral
-    image: 'lekkim/sensorcentral:1.8.16'
+    image: 'lekkim/sensorcentral:1.9.0'
     restart: on-failure
     ports:
       - "8080:8080"
