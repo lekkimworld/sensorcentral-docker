@@ -24,7 +24,7 @@ services:
        - /opt/docker-volumes/redis:/data
   postgres:
     container_name: postgres
-    image: 'postgres:latest'
+    image: 'postgres:15'
     ports:
       - "5432:5432"
     volumes:
