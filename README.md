@@ -34,10 +34,25 @@ curl <url> > /tmp/latest.dump
 scp /tmp/latest.dump lekkim@a.b.c.d:/tmp/latest.dump
 ```
 
-## Create initial database ##
+## Restore database ##
+### Shell 1 ###
+`POSTGRES_PASSWORD=<password> RABBIT_USER=<username> RABBIT_PASSWORD=<password> docker compose -f services-docker-compose.yaml up`
 
-Shell 1: `POSTGRES_PASSWORD=Passw0rd docker compose -f postgres-docker-compose.yaml up`
-Shell 2: `psql -h localhost -U postgres -d sensorcentral`
-Shell 2: `grant all on schema public to sensorcentral;`
-Shell 2: `\q`
-Shell 2: `pg_restore --verbose --clean --no-acl --no-owner -h localhost -U sensorcentral -d sensorcentral /tmp/latest.dump`
+### Shell 2 ###
+```
+pg_restore --verbose --clean --no-acl --no-owner -h localhost -U sensorcentral -d sensorcentral /tmp/latest.dump
+```
+
+## Create initial database ##
+### Shell 1 ###
+```
+POSTGRES_PASSWORD=<password> docker compose -f postgres-docker-compose.yaml up
+```
+
+### Shell 2 ###
+```
+psql -h localhost -U postgres -d sensorcentral
+grant all on schema public to sensorcentral;
+\q
+pg_restore --verbose --clean --no-acl --no-owner -h localhost -U sensorcentral -d sensorcentral /tmp/latest.dump
+```
