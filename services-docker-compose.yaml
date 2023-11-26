@@ -23,7 +23,7 @@ services:
       - ${PWD}/redis:/data
   postgres:
     container_name: postgres
-    image: 'postgres:15'
+    image: 'postgres:15.5'
     ports:
       - "5432:5432"
     volumes:

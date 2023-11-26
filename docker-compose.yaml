@@ -3,6 +3,7 @@ services:
   rabbitmq:
     container_name: rabbitmq
     image: rabbitmq:management
+    restart: unless-stopped
     ports:
     - "15672:15672"
     environment:
@@ -10,34 +11,33 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RABBIT_PASSWORD}
     volumes:
       - ${PWD}/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-      - ${PWD}/rabbitmq:/var/lib/rabbitmq
       - /opt/docker-volumes/rabbitmq:/var/lib/rabbitmq
   redis:
     container_name: redis
     image: 'redis:7'
+    restart: unless-stopped
     command: redis-server --include /usr/local/etc/redis/redis.conf --save 60 1 --loglevel warning
     ports:
      - "6379:6379"
     volumes:
       - ${PWD}/redis.conf:/usr/local/etc/redis/redis.conf
-      - ${PWD}/redis:/data
       - /opt/docker-volumes/redis:/data
   postgres:
     container_name: postgres
-    image: 'postgres:15'
+    image: 'postgres:15.5'
+    restart: unless-stopped
     ports:
       - "5432:5432"
-    volumes:
-      - ${PWD}/00-init-sensorcentral-db.sh:/docker-entrypoint-initdb.d/00-init-sensorcentral-db.sh
-      - ${PWD}/postgres:/var/lib/postgresql/data
-      - /opt/docker-volumes/postgres:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=postgres
       - POSTGRES_HOST_AUTH_METHOD=password
+    volumes:
+      - /opt/docker-volumes/postgres:/var/lib/postgresql/data
+      - ${PWD}/00-init-sensorcentral-db.sh:/docker-entrypoint-initdb.d/00-init-sensorcentral-db.sh
   app:
     container_name: sensorcentral
-    image: 'lekkim/sensorcentral:1.10.5'
+    image: 'lekkim/sensorcentral:1.11'
     restart: on-failure
     ports:
       - "8080:8080"
@@ -46,29 +46,34 @@ services:
       - redis
       - postgres
     environment:
-      - REDIS_URL=redis://redis:6379
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/sensorcentral
-      - CLOUDAMQP_URL=amqp://${RABBIT_USER}:${RABBIT_PASSWORD}@rabbitmq
       - PORT=8080
-      - DATABASE_ALLOW_SCHEMA_UPGRADE=${DATABASE_ALLOW_SCHEMA_UPGRADE}
+      - NODE_ENV=production
       - LOG_LEVEL=${LOG_LEVEL}
       - LOG_LEVEL_LOGGERS=${LOG_LEVEL_LOGGERS}
-      - NODE_ENV=production
-      - APP_NO_PROD_TLS=true
-      - APP_PROTOCOL=http
-      - APP_DOMAIN=localhost
-      - OIDC_PROVIDER_URL=${OIDC_PROVIDER_URL}
-      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID}
-      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET}
-      - OIDC_REDIRECT_URI=${OIDC_REDIRECT_URI}
-      - GOOGLE_HOSTED_DOMAIN=${GOOGLE_HOSTED_DOMAIN}
+      - REDIS_URL=redis://redis:6379
+      - CLOUDAMQP_URL=amqp://${RABBIT_USER}:${RABBIT_PASSWORD}@rabbitmq
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/sensorcentral
+      - DATABASE_ALLOW_SCHEMA_UPGRADE=${DATABASE_ALLOW_SCHEMA_UPGRADE}
+      - APP_NO_PROD_TLS=${APP_NO_PROD_TLS}
+      - APP_DOMAIN=${APP_DOMAIN}
+      - OIDC_PROVIDER_URL_GOOGLE=${OIDC_PROVIDER_URL_GOOGLE}
+      - OIDC_CLIENT_ID_GOOGLE=${OIDC_CLIENT_ID_GOOGLE}
+      - OIDC_CLIENT_SECRET_GOOGLE=${OIDC_CLIENT_SECRET_GOOGLE}
+      - OIDC_REDIRECT_URI_GOOGLE=${OIDC_REDIRECT_URI_GOOGLE}
+      - OIDC_PROVIDER_URL_GITHUB=${OIDC_PROVIDER_URL_GITHUB}
+      - OIDC_CLIENT_ID_GITHUB=${OIDC_CLIENT_ID_GITHUB}
+      - OIDC_CLIENT_SECRET_GITHUB=${OIDC_CLIENT_SECRET_GITHUB}
+      - OIDC_REDIRECT_URI_GITHUB=${OIDC_REDIRECT_URI_GITHUB}
+      - OIDC_PROVIDER_URL_MICROSOFT=${OIDC_PROVIDER_URL_MICROSOFT}
+      - OIDC_CLIENT_ID_MICROSOFT=${OIDC_CLIENT_ID_MICROSOFT}
+      - OIDC_CLIENT_SECRET_MICROSOFT=${OIDC_CLIENT_SECRET_MICROSOFT}
+      - OIDC_REDIRECT_URI_MICROSOFT=${OIDC_REDIRECT_URI_MICROSOFT}
       - GOOGLE_SERVICE_ACCOUNT_EMAIL=${GOOGLE_SERVICE_ACCOUNT_EMAIL}
-      - GOOGLE_TOKEN_URI=https://oauth2.googleapis.com/token
       - GOOGLE_PRIVATE_KEY=${GOOGLE_PRIVATE_KEY}
       - API_JWT_SECRET=${API_JWT_SECRET}
       - SESSION_SECRET=${SESSION_SECRET}
       - SMARTME_KEY=${SMARTME_KEY}
-      - SMARTME_PROTOCOL=${SMARTME_PROTOCOL}
-      - SMARTME_DOMAIN=${SMARTME_DOMAIN}
-      - CRON_POWERMETER_SUBSCRIPTIONS_DISABLED=1
-      - NOTIFICATIONS_DISABLED=1
+      
+networks:
+  default:
+    name: npm-bridge
