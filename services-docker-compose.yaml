@@ -1,17 +1,5 @@
 version: '3'
 services:
-  rabbitmq:
-    container_name: rabbitmq
-    image: rabbitmq:management
-    ports:
-    - "15672:15672"
-    - "5672:5672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=${RABBIT_USER}
-      - RABBITMQ_DEFAULT_PASS=${RABBIT_PASSWORD}
-    volumes:
-      - ${PWD}/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-      - ${PWD}/rabbitmq:/var/lib/rabbitmq
   redis:
     container_name: redis
     image: 'redis:7'
