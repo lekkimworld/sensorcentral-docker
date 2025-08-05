@@ -57,6 +57,15 @@ sudo apt-get update
 sudo apt-get install tailscale
 sudo tailscale up
 
+
+# ensure cron logs are in separate file
+sudo /etc/rsyslog.d/50-default.conf
+# uncomment line #cron.*
+sudo service rsyslog restart
+tail -f /var/log/cron.log
+
+# add crontab entries for database backup and docker cleanup
+
 # configure portainer
 docker volume create portainer_data
 docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:lts
