@@ -2,67 +2,67 @@
 Docker Compose support to run SensorCentral and steps for installing a new server to run it on Digital Ocean.
 
 ## DigitalOcean ##
+
+### Main configuration as a script ### 
 ```
-# ssh in as root (ssh root@.....)
+#!/bin/bash
+export DEBIAN_FRONTEND=noninteractive
+
+# update system
 apt-get update
 apt-get upgrade -y
 
 # uninstall unoffical docker packages
 for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
 
-# Add Docker's official GPG key:
-sudo apt-get update
-sudo apt-get install ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
+# install docker-ce
+apt-get install -y ca-certificates curl
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
 
-# Add the repository to Apt sources:
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
   $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
+apt-get update
 
-apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-docker run --rm hello-world
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # add user
-adduser lekkim
-usermod -aG docker lekkim
-
-# switch to user
-su - lekkim
-mkdir .ssh
-chmod 700 .ssh
-nano ~/.ssh/authorized_keys
-exit
-
-# add new user as sudoer
+adduser lekkim --disabled-password --gecos "Mikkel Flindt Heisterberg"
 adduser lekkim sudo
-
-# exit
-exit
-
-# ssh back in as lekkim (ssh lekkim@.....)
-# test docker
-docker run --rm hello-world
+usermod -aG docker lekkim
+mkdir -p /home/lekkim/.ssh
+chmod 700 /home/lekkim/.ssh
+echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJDgNupVhXjnuScMrP365PabTyduN7TLnAfLx8KbxyvL' > /home/lekkim/.ssh/authorized_keys
+chown -R lekkim:lekkim /home/lekkim/.ssh
 
 # install tailscale
-curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/noble.noarmor.gpg | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
-curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/noble.tailscale-keyring.list | sudo tee /etc/apt/sources.list.d/tailscale.list
-
-sudo apt-get update
-sudo apt-get install tailscale
-sudo tailscale up
-
+curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/noble.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
+curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/noble.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list
+apt-get update
+apt-get install -y tailscale
 
 # ensure cron logs are in separate file
-sudo /etc/rsyslog.d/50-default.conf
-# uncomment line #cron.*
-sudo service rsyslog restart
-tail -f /var/log/cron.log
+sed 's/#cron\.\*/cron\.\*/g' /etc/rsyslog.d/50-default.conf > /etc/rsyslog.d/50-default.conf
+service rsyslog restart
+
+# create directories for sensorcentral data
+sudo mkdir -p /opt/docker-volumes
+sudo mkdir -p /opt/docker-volumes/redis
+sudo mkdir -p /opt/docker-volumes/postgres
+sudo chgrp docker /opt/docker-volumes
+sudo chgrp docker /opt/docker-volumes/redis
+sudo chgrp docker /opt/docker-volumes/postgres
+sudo chmod 770 /opt/docker-volumes/redis
+sudo chmod 770 /opt/docker-volumes/postgres
+```
+
+### Rest of configuration ### 
+```
+# start tailscale
+sudo tailscale up
 
 # add crontab entries for database backup and docker cleanup
 
@@ -117,15 +117,7 @@ networks:
 # open nginx-proxy-manager ui (http://tailscale-hostname:81, configure from admin@exanmple.com (changeme) to lekkim@heisterberg.dk)
 
 
-# create directories for sensorcentral data
-sudo mkdir -p /opt/docker-volumes
-sudo mkdir -p /opt/docker-volumes/redis
-sudo mkdir -p /opt/docker-volumes/postgres
-sudo chgrp docker /opt/docker-volumes
-sudo chgrp docker /opt/docker-volumes/redis
-sudo chgrp docker /opt/docker-volumes/postgres
-sudo chmod 770 /opt/docker-volumes/redis
-sudo chmod 770 /opt/docker-volumes/postgres
+
 
 # checkout sensorcentral-docker repo into /home/lekkim
 # create sensorcentral stack in portainer
