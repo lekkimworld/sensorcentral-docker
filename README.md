@@ -218,7 +218,7 @@ ADMIN_PASSWORD=7Yo...!5Cc
 
 # to restore the database stop the sensorcentral and postgres containers, remove the postgres directory (/opt/docker-volumes/postgres) and recreate it 
 # restore the database
-psql -X sensorcentral -h localhost -U sensorcentral < /tmp/sensorcentral-backup-20250805T1017.dump
+pg_restore --verbose -d sensorcentral -h localhost -U sensorcentral /tmp/dump.latest-202511140956
 
 
 # backup database (-Fc compresses the backup) over tailscale

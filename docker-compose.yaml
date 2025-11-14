@@ -9,10 +9,12 @@ services:
      - "6379:6379"
     volumes:
       - ${PWD}/redis.conf:/usr/local/etc/redis/redis.conf
-      - ${PWD}/redis:/data
+      - /opt/docker-volumes/sensorcentral/redis:/data
+    networks:
+      - backend
   postgres:
     container_name: postgres
-    image: 'postgres:15.5'
+    image: 'postgres:18'
     restart: unless-stopped
     ports:
       - "5432:5432"
@@ -21,29 +23,33 @@ services:
       - POSTGRES_DB=postgres
       - POSTGRES_HOST_AUTH_METHOD=password
     volumes:
-      - ${PWD}/postgres:/var/lib/postgresql/data
+      - /opt/docker-volumes/sensorcentral/postgres:/var/lib/postgresql/18/docker
       - ${PWD}/00-init-sensorcentral-db.sh:/docker-entrypoint-initdb.d/00-init-sensorcentral-db.sh
+    networks:
+      - backend
   app:
     container_name: sensorcentral
-    image: 'lekkim/sensorcentral:1.13'
+    image: 'lekkim/sensorcentral:1.14'
     restart: on-failure
     ports:
       - "8080:8080"
     depends_on:
       - redis
       - postgres
+    networks:
+      - npm-bridge
+      - backend
     environment:
       - PORT=8080
-      - NODE_ENV=production
       - LOG_LEVEL=${LOG_LEVEL}
       - LOG_LEVEL_LOGGERS=${LOG_LEVEL_LOGGERS}
       - REDIS_URL=redis://redis:6379
-      - CLOUDAMQP_URL=amqp://${RABBIT_USER}:${RABBIT_PASSWORD}@rabbitmq
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/sensorcentral
       - DATABASE_ALLOW_SCHEMA_UPGRADE=${DATABASE_ALLOW_SCHEMA_UPGRADE}
       - APP_NO_PROD_TLS=${APP_NO_PROD_TLS}
       - APP_DOMAIN=${APP_DOMAIN}
-      - APP_TITLE=${APP_TITLE}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - OIDC_PROVIDER_URL_GOOGLE=${OIDC_PROVIDER_URL_GOOGLE}
       - OIDC_CLIENT_ID_GOOGLE=${OIDC_CLIENT_ID_GOOGLE}
       - OIDC_CLIENT_SECRET_GOOGLE=${OIDC_CLIENT_SECRET_GOOGLE}
@@ -61,8 +67,9 @@ services:
       - API_JWT_SECRET=${API_JWT_SECRET}
       - SESSION_SECRET=${SESSION_SECRET}
       - SMARTME_KEY=${SMARTME_KEY}
-      - CRON_POWERMETER_SUBSCRIPTIONS_DISABLED=1
       
 networks:
-  default:
-    name: npm-bridge
+  npm-bridge:
+    external: true
+  backend:
+    driver: bridge
