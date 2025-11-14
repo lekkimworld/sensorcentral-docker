@@ -250,7 +250,37 @@ SMARTME_DOMAIN=localhost:3001 \
 docker compose up
 ```
 
+## Update to Postgres 18 ##
+```
+- shutdown containers (except postgres)
 
+- backup
+pg_dump -h localhost -U sensorcentral -d sensorcentral -Fc > /tmp/dump.latest
+
+- shutdown postgres container
+
+- rename postgres dir
+sudo mv /opt/docker-volumes/sensorcentral/postgres /opt/docker-volumes/sensorcentral/postgres_15.5
+
+- create new postgres dir
+sudo mkdir /opt/docker-volumes/sensorcentral/postgres
+sudo chgrp docker /opt/docker-volumes/sensorcentral/postgres
+
+- remove existing postgres container, start new clean postgres container (check path to postgres dir)
+docker container ls -a
+docker container rm <postgres container id>
+POSTGRES_PASSWORD=Passw0rd docker compose -f postgres-docker-compose.yaml up
+
+- restore into new clean postgres container
+pg_restore --verbose -d sensorcentral -h localhost -U sensorcentral /tmp/dump.latest
+>> shutdown postgres container
+docker container ls -a
+docker container rm <postgres container id>
+
+- edit path in stack config
+
+- start containers
+```
 
 
 
