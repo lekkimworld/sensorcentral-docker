@@ -285,3 +285,12 @@ docker container rm <postgres container id>
 
 
 
+```bash
+ docker container ls -a
+ export SENSORCENTRAL_REDIS_CONTAINERID=<redis_id>
+ export SENSORCENTRAL_POSTGRES_CONTAINERID=<postgres_id>
+ docker container rm $SENSORCENTRAL_REDIS_CONTAINERID
+ docker container rm $SENSORCENTRAL_POSTGRES_CONTAINERID
+ POSTGRES_PASSWORD=Passw0rd docker compose -f services-docker-compose.yaml up
+ docker exec -it $SENSORCENTRAL_POSTGRES_CONTAINERID pg_restore --verbose -d sensorcentral -h localhost -U postgres /dump/dump.latest
+```
